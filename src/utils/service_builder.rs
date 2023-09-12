@@ -11,13 +11,13 @@ use crate::back::{
     dispatcher::DispatcherBuilder,
 };
 use crate::front::{
-    domain_socket::DomainSocketListenerBuilder, front_end::FrontEndHandler,
+    domain_socket::TCPSocketListenerBuilder, front_end::FrontEndHandler,
     front_end::FrontEndHandlerBuilder, listener::Listen,
 };
 use crate::key_info_managers::KeyInfoManagerFactory;
 use crate::providers::{core::ProviderBuilder as CoreProviderBuilder, Provide};
 use crate::utils::config::{
-    AuthenticatorConfig, KeyInfoManagerConfig, ListenerConfig, ListenerType, ProviderConfig,
+    AuthenticatorConfig, KeyInfoManagerConfig, ListenerConfig,  ProviderConfig,
     ServiceConfig,
 };
 use anyhow::Result;
@@ -29,7 +29,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::io::{Error, ErrorKind};
 use std::sync::Arc;
-use std::time::Duration;
+//use std::time::Duration;
 use threadpool::{Builder as ThreadPoolBuilder, ThreadPool};
 
 #[cfg(feature = "direct-authenticator")]
@@ -165,15 +165,20 @@ impl ServiceBuilder {
     }
 
     /// Construct the service IPC front component and return ownership to it.
-    pub fn start_listener(config: ListenerConfig) -> Result<Box<dyn Listen>> {
-        let listener = match config.listener_type {
-            ListenerType::DomainSocket => DomainSocketListenerBuilder::new()
-                .with_timeout(Duration::from_millis(config.timeout))
-                .with_socket_path(config.socket_path.map(|s| s.into()))
-                .build(),
-        }?;
+    pub fn start_listener(_config: ListenerConfig) -> Result<Box<dyn Listen>> {
 
-        Ok(Box::new(listener))
+	  println!("Start listener");
+	 
+//        let listener = match config.listener_type {
+//            ListenerType::DomainSocket => DomainSocketListenerBuilder::new()
+//                .with_timeout(Duration::from_millis(config.timeout))
+//                .with_socket_path(config.socket_path.map(|s| s.into()))
+//                .build(),
+//        }?;
+//
+//        Ok(Box::new(listener))
+	 let listener = TCPSocketListenerBuilder::new().build()?;
+         Ok(Box::new(listener))
     }
 
     /// Construct the thread pool that will be used to process all service requests.
