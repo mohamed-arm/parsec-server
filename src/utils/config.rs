@@ -52,10 +52,12 @@ pub struct CoreSettings {
 }
 
 /// Type of the Listener used
-#[derive(Copy, Clone, Deserialize, Debug)]
+#[derive(Copy, Clone, PartialEq, Deserialize, Debug)]
 pub enum ListenerType {
     /// Listener using Unix Domain Socket
     DomainSocket,
+    /// Listener using Tcp Socket
+    TcpSocket,
 }
 
 /// Configuration of the Listener
