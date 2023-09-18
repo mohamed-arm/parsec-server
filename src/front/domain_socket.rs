@@ -20,8 +20,6 @@ use std::os::unix::net::UnixListener;
 use std::path::PathBuf;
 use std::time::Duration;
 
-use std::net::TcpListener;
-
 static DEFAULT_SOCKET_PATH: &str = "/run/parsec/parsec.sock";
 
 /// Unix Domain Socket IPC manager
@@ -33,25 +31,6 @@ static DEFAULT_SOCKET_PATH: &str = "/run/parsec/parsec.sock";
 pub struct DomainSocketListener {
     listener: UnixListener,
     timeout: Duration,
-}
-
-#[derive(Debug)]
-#[allow(missing_docs)]
-#[allow(unused)]
-pub struct TcpSocketListener {
-    listener: TcpListener,
-    timeout: Duration,
-}
-
-
-#[allow(missing_docs)]
-impl TcpSocketListener {
-	// TODO
-	pub fn new (timeout: Duration) -> Result<Self> {	
-		let listener = TcpListener::bind("0.0.0.0:8002")?;
-
-		Ok(Self { listener, timeout })
-	}
 }
 
 impl DomainSocketListener {
@@ -114,57 +93,6 @@ impl DomainSocketListener {
         };
 
         Ok(Self { listener, timeout })
-    }
-}
-
-impl Listen for TcpSocketListener{
-    fn set_timeout(&mut self, duration: Duration) {
-        self.timeout = duration;
-    }
-
-    fn accept(&self) -> Option<Connection> { 
-	println!("at accept");
-	let stream_result = self.listener.accept();	
- 	match stream_result {
-            Ok((stream, _)) => {
-                if let Err(err) = stream.set_read_timeout(Some(self.timeout)) {
-                    format_error!("Failed to set read timeout", err);
-                    None
-                } else if let Err(err) = stream.set_write_timeout(Some(self.timeout)) {
-                    format_error!("Failed to set write timeout", err);
-                    None
-                } else if let Err(err) = stream.set_nonblocking(false) {
-                    format_error!("Failed to set stream as blocking", err);
-                    None
-                } else {
-                    //let ucred = peer_credentials::peer_cred(&stream)
-                    //    .map_err(|err| {
-                    //        format_error!(
-                    //            "Failed to grab peer credentials metadata from UnixStream",
-                    //            err
-                    //        );
-                    //        err
-                    //    })
-                    //    .ok()?;
-                    Some(Connection {
-                        stream: Box::new(stream),
-                        metadata: Some(ConnectionMetadata::UnixPeerCredentials {
-                            uid: 1, 
-                            gid: 1,
-                            pid: Some(1),
-                        }),
-                    })
-                }
-            }
-            Err(err) => {
-                // Check if the error is because no connections are currently present.
-                if err.kind() != ErrorKind::WouldBlock {
-                    // Only log the real errors.
-                    format_error!("Failed to connect with a UnixStream", err);
-                }
-                None
-            }
-        }
     }
 }
 
@@ -257,29 +185,6 @@ impl DomainSocketListenerBuilder {
                 .unwrap_or_else(|| DEFAULT_SOCKET_PATH.into()),
         )
     }
-}
-
-#[allow(missing_docs)]
-#[allow(missing_copy_implementations)]
-#[allow(unused)]
-#[derive(Clone, Debug, Default)]
-pub struct TCPSocketListenerBuilder {
-    timeout:  Option<Duration>,
-    socket_port: Option<u16>
-}
-
-#[allow(missing_docs)]
-impl TCPSocketListenerBuilder {
-	pub fn new() -> Self { 
-		TCPSocketListenerBuilder {
-			timeout: None,
-			socket_port : Some(80),
-		}
-	}	
-
-	pub fn build(self) -> Result<TcpSocketListener> {
-		TcpSocketListener::new(Duration::from_millis(800))
-	}
 }
 
 // == IMPORTANT NOTE ==
