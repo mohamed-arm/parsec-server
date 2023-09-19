@@ -11,7 +11,7 @@ use crate::back::{
     dispatcher::DispatcherBuilder,
 };
 use crate::front::{
-    domain_socket::DomainSocketListenerBuilder, front_end::FrontEndHandler,
+    domain_socket::DomainSocketListenerBuilder, front_end::FrontEndHandler, tcp_socket::TcpSocketListenerBuilder,
     front_end::FrontEndHandlerBuilder, listener::Listen,
 };
 use crate::key_info_managers::KeyInfoManagerFactory;
@@ -166,14 +166,21 @@ impl ServiceBuilder {
 
     /// Construct the service IPC front component and return ownership to it.
     pub fn start_listener(config: ListenerConfig) -> Result<Box<dyn Listen>> {
-        let listener = match config.listener_type {
-            ListenerType::DomainSocket => DomainSocketListenerBuilder::new()
+        if config.listener_type ==  ListenerType::DomainSocket {
+            let listener;
+            listener = DomainSocketListenerBuilder::new()
                 .with_timeout(Duration::from_millis(config.timeout))
                 .with_socket_path(config.socket_path.map(|s| s.into()))
-                .build(),
-        }?;
-
-        Ok(Box::new(listener))
+                .build()?;
+            Ok(Box::new(listener))
+        } else {
+            let listener;
+            listener = TcpSocketListenerBuilder::new()
+                .with_timeout(Duration::from_millis(config.timeout))
+                .with_socket_port(config.socket_port)
+                .build()?;
+            Ok(Box::new(listener))
+        }
     }
 
     /// Construct the thread pool that will be used to process all service requests.
