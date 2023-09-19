@@ -2,5 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 //! IPC front handlers
 pub mod domain_socket;
+pub mod tcp_socket;
 pub mod front_end;
 pub mod listener;

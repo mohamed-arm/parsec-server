@@ -52,10 +52,12 @@ pub struct CoreSettings {
 }
 
 /// Type of the Listener used
-#[derive(Copy, Clone, Deserialize, Debug)]
+#[derive(Copy, Clone, PartialEq, Deserialize, Debug)]
 pub enum ListenerType {
     /// Listener using Unix Domain Socket
     DomainSocket,
+    /// Listener using Tcp Socket
+    TcpSocket,
 }
 
 /// Configuration of the Listener
@@ -67,6 +69,8 @@ pub struct ListenerConfig {
     pub timeout: u64,
     /// Path of the Unix Domain socket
     pub socket_path: Option<String>,
+    /// Port of the TCP socket
+    pub socket_port: Option<u16>,
 }
 
 /// Authenticator configuration structure
